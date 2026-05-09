@@ -94,11 +94,21 @@ function advanceNormalSpin(s, settings) {
   s.normalSpendCounter += 1;
 
   while (s.normalSpendCounter >= base) {
-    s.money -= SPEC.yenPerUnit;
-    s.balls -= SPEC.ballsPerUnit;
+    spendNormalUnit(s);
     s.normalSpendCounter -= base;
-    addGraphPoint(s, "投資");
   }
+}
+
+function spendNormalUnit(s) {
+  if (s.balls > 0) {
+    s.balls = Math.max(0, s.balls - SPEC.ballsPerUnit);
+    addGraphPoint(s, "持ち玉遊技");
+    return;
+  }
+
+  s.money -= SPEC.yenPerUnit;
+  s.balls -= SPEC.ballsPerUnit;
+  addGraphPoint(s, "投資");
 }
 
 function advanceRushSpin(s) {
@@ -172,6 +182,7 @@ function leaveRush(s) {
   s.mode = "normal";
   s.supportLeft = 0;
   s.currentRushSpins = 0;
+  s.currentNormalSpins = 0;
   s.spins = 0;
   s.lastEvent = "RUSH終了";
   addGraphPoint(s, "RUSH終了");
@@ -280,7 +291,7 @@ function addHistory(s, entry) {
 
 function addGraphPoint(s, label) {
   s.graph.push({
-    x: s.totalSpins,
+    x: s.normalSpins,
     y: s.balls,
     label,
   });

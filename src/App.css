@@ -17,6 +17,100 @@
   padding: 4px 0 12px;
 }
 
+.top-page {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.top-hero {
+  padding: 18px 2px 4px;
+}
+
+.top-hero h1 {
+  margin: 0;
+  color: #101613;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.top-hero p:last-child {
+  margin-top: 8px;
+  color: #68736f;
+  font-size: 14px;
+}
+
+.machine-list {
+  display: grid;
+  gap: 12px;
+}
+
+.machine-card {
+  padding: 14px;
+  border: 1px solid #dfe5e2;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(16, 22, 19, 0.06);
+  display: grid;
+  gap: 12px;
+}
+
+.machine-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #23645c;
+  background: rgba(35, 100, 92, 0.1);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.machine-card h2 {
+  margin: 0;
+  color: #101613;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.machine-card p {
+  margin-top: 6px;
+  color: #68736f;
+  font-size: 13px;
+}
+
+.machine-specs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.machine-specs div {
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #f3f5f4;
+}
+
+.machine-specs dt {
+  color: #68736f;
+  font-size: 11px;
+}
+
+.machine-specs dd {
+  margin: 2px 0 0;
+  color: #101613;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.machine-start {
+  width: 100%;
+}
+
 .eyebrow {
   margin: 0 0 2px;
   color: #23645c;
@@ -58,6 +152,14 @@ button {
   background: #fff;
 }
 
+.back-button {
+  min-height: 38px;
+  padding: 0 12px;
+  color: #23645c;
+  font-size: 13px;
+  background: #fff;
+}
+
 .hero-panel,
 .action-card,
 .graph-card,
@@ -73,6 +175,18 @@ button {
   background:
     linear-gradient(145deg, rgba(35, 100, 92, 0.1), rgba(210, 63, 49, 0.08)),
     #fff;
+}
+
+.machine-title {
+  margin-bottom: 14px;
+}
+
+.machine-title h1 {
+  margin: 0;
+  color: #101613;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: 0;
 }
 
 .hit-effect {

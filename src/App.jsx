@@ -1,17 +1,81 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
-import {
-  SPEC,
-  createInitialState,
-  getModeLabel,
-  spinOnce,
-  spinUntilHit,
-} from "./logic/pachinkoEngine";
+import { findMachineById, machines } from "./machines";
 
 const formatter = new Intl.NumberFormat("ja-JP");
 
 export default function App() {
-  const [state, setState] = useState(createInitialState());
+  const [route, setRoute] = useState(() => parseHashRoute());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setRoute(parseHashRoute());
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  const selectedMachine =
+    route.type === "machine" ? findMachineById(route.machineId) : null;
+
+  if (selectedMachine) {
+    return (
+      <Simulator
+        key={selectedMachine.id}
+        machine={selectedMachine}
+        onBack={() => navigateToTop()}
+      />
+    );
+  }
+
+  return <TopPage machines={machines} />;
+}
+
+function TopPage({ machines }) {
+  return (
+    <main className="app-shell top-page">
+      <header className="top-hero">
+        <p className="eyebrow">Pachinko Simulator</p>
+        <h1>遊びたい機種を選択</h1>
+        <p>
+          1000円ベースを変えながら、出玉推移とRUSH性能をスマホでサクッと検証できます。
+        </p>
+      </header>
+
+      <section className="machine-list" aria-label="機種一覧">
+        {machines.map((machine) => (
+          <article key={machine.id} className="machine-card">
+            <div>
+              <span className="machine-badge">{machine.shortName}</span>
+              <h2>{machine.name}</h2>
+              <p>{machine.description}</p>
+            </div>
+
+            <dl className="machine-specs">
+              <SpecTerm label="通常" value={machine.specSummary.normalOdds} />
+              <SpecTerm label="RUSH" value={machine.specSummary.rushOdds} />
+              <SpecTerm label="突入率" value={machine.specSummary.rushEntry} />
+              <SpecTerm label="継続率" value={machine.specSummary.continuation} />
+            </dl>
+
+            <button
+              type="button"
+              className="primary machine-start"
+              onClick={() => navigateToMachine(machine.id)}
+            >
+              この機種で遊ぶ
+            </button>
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}
+
+function Simulator({ machine, onBack }) {
+  const { engine } = machine;
+  const [state, setState] = useState(() => engine.createInitialState());
   const [settings, setSettings] = useState({
     baseSpinsPer1000: 11,
   });
@@ -32,47 +96,56 @@ export default function App() {
 
   const graph = useMemo(() => buildGraph(state.graph), [state.graph]);
   const latestHit = state.history[0];
+  const isNormalMode = state.mode === "normal";
+  const mainCounterLabel = isNormalMode ? "通常時回転数" : "電サポ残り";
+  const mainCounterValue = isNormalMode
+    ? state.currentNormalSpins
+    : state.supportLeft;
 
   const handleSpin = () => {
-    setState((prev) => spinOnce(prev, settings));
+    setState((prev) => engine.spinOnce(prev, settings));
   };
 
   const handleSkip = () => {
-    setState((prev) => spinUntilHit(prev, settings));
+    setState((prev) => engine.spinUntilHit(prev, settings));
   };
 
   const handleReset = () => {
-    setState(createInitialState());
+    setState(engine.createInitialState());
   };
 
   return (
     <main className="app-shell">
       {latestHit && (
         <div key={latestHit.id} className="hit-effect" aria-live="polite">
-          <span>大当たり！</span>
+          <span>大当たり!</span>
           <strong>{formatter.format(latestHit.payout)}玉</strong>
         </div>
       )}
 
       <header className="top-bar">
-        <div>
-          <p className="eyebrow">Pachinko Simulator</p>
-          <h1>パチンコ_リコリコシミュレーション</h1>
-        </div>
+        <button type="button" className="back-button" onClick={onBack}>
+          トップへ
+        </button>
         <button type="button" className="reset-button" onClick={handleReset}>
           リセット
         </button>
       </header>
 
       <section className="hero-panel">
+        <div className="machine-title">
+          <p className="eyebrow">Pachinko Simulator</p>
+          <h1>{machine.name}</h1>
+        </div>
+
         <div className="mode-row">
           <span>現在モード</span>
-          <strong>{getModeLabel(state.mode)}</strong>
+          <strong>{engine.getModeLabel(state.mode)}</strong>
         </div>
 
         <div className="support-meter">
-          <span>電サポ残り</span>
-          <strong>{state.supportLeft}</strong>
+          <span>{mainCounterLabel}</span>
+          <strong>{mainCounterValue}</strong>
           <small>回</small>
         </div>
 
@@ -174,8 +247,8 @@ export default function App() {
       </section>
 
       <footer className="spec-note">
-        通常 1/{SPEC.normalOdds} / RUSH 1/{SPEC.rushOdds} / 電サポ{" "}
-        {SPEC.supportSpins}回
+        通常 {machine.specSummary.normalOdds} / RUSH {machine.specSummary.rushOdds} /
+        電サポ {machine.specSummary.supportSpins}
       </footer>
     </main>
   );
@@ -188,6 +261,35 @@ function Stat({ label, value }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function SpecTerm({ label, value }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function parseHashRoute() {
+  const hash = window.location.hash.replace(/^#/, "");
+  const normalizedHash = hash === "" ? "/" : hash;
+  const machineMatch = normalizedHash.match(/^\/machines\/([^/]+)$/);
+
+  if (machineMatch) {
+    return { type: "machine", machineId: machineMatch[1] };
+  }
+
+  return { type: "top" };
+}
+
+function navigateToTop() {
+  window.location.hash = "/";
+}
+
+function navigateToMachine(machineId) {
+  window.location.hash = `/machines/${machineId}`;
 }
 
 function buildGraph(points) {
