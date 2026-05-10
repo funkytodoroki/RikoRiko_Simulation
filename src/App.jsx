@@ -4,6 +4,9 @@ import { findMachineById, machines } from "./machines";
 
 const formatter = new Intl.NumberFormat("ja-JP");
 
+const disclaimerText =
+  "このサイトは娯楽用の確率シミュレーターです。実際の金銭、景品、換金、賭け、遊技結果を提供せず、実店舗や実機での結果を保証しません。";
+
 export default function App() {
   const [route, setRoute] = useState(() => parseHashRoute());
 
@@ -29,6 +32,18 @@ export default function App() {
     );
   }
 
+  if (route.type === "privacy") {
+    return <StaticPage page="privacy" />;
+  }
+
+  if (route.type === "terms") {
+    return <StaticPage page="terms" />;
+  }
+
+  if (route.type === "contact") {
+    return <StaticPage page="contact" />;
+  }
+
   return <TopPage machines={machines} />;
 }
 
@@ -36,12 +51,23 @@ function TopPage({ machines }) {
   return (
     <main className="app-shell top-page">
       <header className="top-hero">
-        <p className="eyebrow">Pachinko Simulator</p>
-        <h1>遊びたい機種を選択</h1>
+        <p className="eyebrow">Pachinko Probability Simulator</p>
+        <h1>パチンコ確率シミュレーター</h1>
         <p>
-          1000円ベースを変えながら、出玉推移とRUSH性能をスマホでサクッと検証できます。
+          仮想1000円あたりの回転数を変えながら、仮想玉数の推移とRUSH性能を検証できます。
+          実際の遊技や収益をすすめるものではありません。
         </p>
       </header>
+
+      <Disclaimer />
+
+      <section className="info-section" aria-label="サイトの説明">
+        <h2>このサイトについて</h2>
+        <p>
+          パチンコ機の公開スペックをもとに、乱数による挙動を試せる非公式のファンメイドツールです。
+          表示される仮想玉数や仮想消費は、確率のゆらぎを観察するための参考値です。
+        </p>
+      </section>
 
       <section className="machine-list" aria-label="機種一覧">
         {machines.map((machine) => (
@@ -50,13 +76,16 @@ function TopPage({ machines }) {
               <span className="machine-badge">{machine.shortName}</span>
               <h2>{machine.name}</h2>
               <p>{machine.description}</p>
+              <p className="rights-note">
+                非公式ファンメイド。権利元、メーカー、店舗とは無関係です。
+              </p>
             </div>
 
             <dl className="machine-specs">
-              <SpecTerm label="通常" value={machine.specSummary.normalOdds} />
-              <SpecTerm label="RUSH" value={machine.specSummary.rushOdds} />
+              <SpecTerm label="通常確率" value={machine.specSummary.normalOdds} />
+              <SpecTerm label="RUSH確率" value={machine.specSummary.rushOdds} />
               <SpecTerm label="突入率" value={machine.specSummary.rushEntry} />
-              <SpecTerm label="継続率" value={machine.specSummary.continuation} />
+              <SpecTerm label="継続率目安" value={machine.specSummary.continuation} />
             </dl>
 
             <button
@@ -64,11 +93,13 @@ function TopPage({ machines }) {
               className="primary machine-start"
               onClick={() => navigateToMachine(machine.id)}
             >
-              この機種で遊ぶ
+              シミュレーションを開始
             </button>
           </article>
         ))}
       </section>
+
+      <SiteFooter />
     </main>
   );
 }
@@ -89,9 +120,9 @@ function Simulator({ machine, onBack }) {
       state.firstHitCount > 0
         ? `${((state.rushCount / state.firstHitCount) * 100).toFixed(1)}%`
         : "-";
-    const totalInvestment = Math.abs(Math.min(state.money, 0));
+    const totalVirtualSpend = Math.abs(Math.min(state.money, 0));
 
-    return { firstHitRate, rushEntryRate, totalInvestment };
+    return { firstHitRate, rushEntryRate, totalVirtualSpend };
   }, [state]);
 
   const graph = useMemo(() => buildGraph(state.graph), [state.graph]);
@@ -119,7 +150,7 @@ function Simulator({ machine, onBack }) {
       {latestHit && (
         <div key={latestHit.id} className="hit-effect" aria-live="polite">
           <span>大当たり!</span>
-          <strong>{formatter.format(latestHit.payout)}玉</strong>
+          <strong>{formatter.format(latestHit.payout)}仮想玉</strong>
         </div>
       )}
 
@@ -134,8 +165,11 @@ function Simulator({ machine, onBack }) {
 
       <section className="hero-panel">
         <div className="machine-title">
-          <p className="eyebrow">Pachinko Simulator</p>
+          <p className="eyebrow">Pachinko Probability Simulator</p>
           <h1>{machine.name}</h1>
+          <p className="rights-note">
+            非公式ファンメイド。権利元、メーカー、店舗とは無関係です。
+          </p>
         </div>
 
         <div className="mode-row">
@@ -151,19 +185,21 @@ function Simulator({ machine, onBack }) {
 
         <div className="hero-numbers">
           <div>
-            <span>玉収支</span>
+            <span>仮想玉数</span>
             <strong>{formatSigned(state.balls)}玉</strong>
           </div>
           <div>
-            <span>投資</span>
-            <strong>{formatter.format(stats.totalInvestment)}円</strong>
+            <span>仮想消費</span>
+            <strong>{formatter.format(stats.totalVirtualSpend)}円相当</strong>
           </div>
         </div>
       </section>
 
+      <Disclaimer />
+
       <section className="action-card">
         <label className="base-select">
-          <span>1000円あたりの回転数</span>
+          <span>仮想1000円あたりの回転数</span>
           <select
             value={settings.baseSpinsPer1000}
             onChange={(event) =>
@@ -175,7 +211,7 @@ function Simulator({ machine, onBack }) {
           >
             {Array.from({ length: 20 }, (_, i) => 6 + i).map((value) => (
               <option key={value} value={value}>
-                {value}回転 / 1000円
+                {value}回転 / 仮想1000円
               </option>
             ))}
           </select>
@@ -185,7 +221,7 @@ function Simulator({ machine, onBack }) {
             1回転
           </button>
           <button type="button" className="primary" onClick={handleSkip}>
-            当たるまで
+            次の大当たりまで
           </button>
         </div>
       </section>
@@ -197,14 +233,14 @@ function Simulator({ machine, onBack }) {
         <Stat label="突入率" value={stats.rushEntryRate} />
         <Stat label="通常回転" value={`${state.normalSpins}回`} />
         <Stat label="現在回転" value={`${state.spins}回`} />
-        <Stat label="総当たり" value={`${state.totalHits}回`} />
-        <Stat label="RUSH当たり" value={`${state.rushHitCount}回`} />
+        <Stat label="総大当たり" value={`${state.totalHits}回`} />
+        <Stat label="RUSH大当たり" value={`${state.rushHitCount}回`} />
       </section>
 
       <section className="graph-card">
         <div className="section-title">
           <h2>スランプグラフ</h2>
-          <span>現在出玉 {formatSigned(state.balls)}玉</span>
+          <span>現在の仮想玉数 {formatSigned(state.balls)}玉</span>
         </div>
         <svg className="slump-graph" viewBox="0 0 720 260" role="img">
           <line
@@ -233,11 +269,11 @@ function Simulator({ machine, onBack }) {
                 <div>
                   <strong>{item.type}</strong>
                   <span>
-                    総回転 {item.totalSpin}回 / 当選まで {item.spin}回
+                    総回転 {item.totalSpin}回 / 大当たりまで {item.spin}回
                   </span>
                 </div>
                 <div className="history-result">
-                  <strong>{formatter.format(item.payout)}玉</strong>
+                  <strong>{formatter.format(item.payout)}仮想玉</strong>
                   <span>{item.modeAfter}</span>
                 </div>
               </article>
@@ -250,7 +286,61 @@ function Simulator({ machine, onBack }) {
         通常 {machine.specSummary.normalOdds} / RUSH {machine.specSummary.rushOdds} /
         電サポ {machine.specSummary.supportSpins}
       </footer>
+      <SiteFooter />
     </main>
+  );
+}
+
+function StaticPage({ page }) {
+  const content = staticPages[page];
+
+  return (
+    <main className="app-shell top-page">
+      <header className="top-bar">
+        <button type="button" className="back-button" onClick={navigateToTop}>
+          トップへ
+        </button>
+      </header>
+
+      <article className="policy-page">
+        <p className="eyebrow">Site Policy</p>
+        <h1>{content.title}</h1>
+        {content.formUrl && (
+          <a
+            className="form-link"
+            href={content.formUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            お問い合わせフォームを開く
+          </a>
+        )}
+        {content.sections.map((section) => (
+          <section key={section.heading}>
+            <h2>{section.heading}</h2>
+            {section.body.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </section>
+        ))}
+      </article>
+
+      <SiteFooter />
+    </main>
+  );
+}
+
+function Disclaimer() {
+  return <p className="disclaimer">{disclaimerText}</p>;
+}
+
+function SiteFooter() {
+  return (
+    <nav className="site-footer" aria-label="サイト情報">
+      <a href="#/privacy">プライバシーポリシー</a>
+      <a href="#/terms">利用規約・免責</a>
+      <a href="#/contact">お問い合わせ</a>
+    </nav>
   );
 }
 
@@ -279,6 +369,18 @@ function parseHashRoute() {
 
   if (machineMatch) {
     return { type: "machine", machineId: machineMatch[1] };
+  }
+
+  if (normalizedHash === "/privacy") {
+    return { type: "privacy" };
+  }
+
+  if (normalizedHash === "/terms") {
+    return { type: "terms" };
+  }
+
+  if (normalizedHash === "/contact") {
+    return { type: "contact" };
   }
 
   return { type: "top" };
@@ -323,3 +425,74 @@ function formatSigned(value) {
   const prefix = value > 0 ? "+" : "";
   return `${prefix}${formatter.format(value)}`;
 }
+
+const staticPages = {
+  privacy: {
+    title: "プライバシーポリシー",
+    sections: [
+      {
+        heading: "アクセス解析と広告について",
+        body: [
+          "当サイトでは、利用状況の把握とサイト改善のために Google Analytics を使用する場合があります。また、広告配信のために Google AdSense を使用する場合があります。",
+          "これらのサービスでは Cookie などの技術を利用し、ユーザーのブラウザ情報や閲覧情報が収集されることがあります。個人を直接特定する情報の収集を目的とするものではありません。",
+        ],
+      },
+      {
+        heading: "Cookie の管理",
+        body: [
+          "Cookie の利用はブラウザ設定から無効にできます。設定方法は利用中のブラウザのヘルプをご確認ください。",
+        ],
+      },
+      {
+        heading: "免責",
+        body: [
+          "当サイトのシミュレーション結果は娯楽と確率検証を目的とした参考情報です。実際の遊技結果、収益、損失、店舗での挙動を保証しません。",
+        ],
+      },
+    ],
+  },
+  terms: {
+    title: "利用規約・免責",
+    sections: [
+      {
+        heading: "サイトの目的",
+        body: [
+          "当サイトはパチンコ機の確率的な挙動を仮想的に確認するための非公式ファンメイドツールです。実際の金銭、景品、換金、賭けを扱うサービスではありません。",
+        ],
+      },
+      {
+        heading: "利用上の注意",
+        body: [
+          "表示される仮想玉数や仮想消費はシミュレーション上の値です。実店舗や実機で同じ結果になることを示すものではありません。",
+          "未成年の方、遊技への不安や依存に関する心配がある方は、実際の遊技を目的として本サイトを利用しないでください。",
+        ],
+      },
+      {
+        heading: "権利関係",
+        body: [
+          "当サイトは非公式であり、掲載している名称やスペックの権利元、メーカー、店舗とは関係ありません。問題がある場合はお問い合わせページからご連絡ください。",
+        ],
+      },
+    ],
+  },
+  contact: {
+    title: "お問い合わせ",
+    formUrl:
+      "https://docs.google.com/forms/d/e/1FAIpQLSfo7Ovcr1TE9pTynLjrPZvA5VnPn9Qz34wXEJc9J2fwvtixAg/viewform?usp=publish-editor",
+    sections: [
+      {
+        heading: "連絡方法",
+        body: [
+          "サイト内容、権利関係、広告表示、ポリシーに関するご連絡は、Googleフォームからお願いします。",
+          "お問い合わせ時は、問題の内容、確認した日時、必要に応じて対象ページや機種名が分かる情報を本文に記載してください。",
+        ],
+      },
+      {
+        heading: "対応方針",
+        body: [
+          "不正確な情報、権利上の懸念、広告表示の問題が確認できた場合は、内容の修正または削除を検討します。",
+        ],
+      },
+    ],
+  },
+};

@@ -72,7 +72,7 @@ export const spinUntilHit = (state, settings, maxSpins = 10000) => {
   }
 
   if (spun >= maxSpins && s.totalHits === startHits) {
-    s.lastEvent = `${maxSpins.toLocaleString()}回転で当たりなし`;
+    s.lastEvent = `${maxSpins.toLocaleString()}回転で大当たりなし`;
   }
 
   return s;
@@ -104,13 +104,13 @@ function advanceNormalSpin(s, settings) {
 function spendNormalUnit(s) {
   if (s.balls > 0) {
     s.balls = Math.max(0, s.balls - SPEC.ballsPerUnit);
-    addGraphPoint(s, "持ち玉遊技");
+    addGraphPoint(s, "持ち玉での仮想遊技");
     return;
   }
 
   s.money -= SPEC.yenPerUnit;
   s.balls -= SPEC.ballsPerUnit;
-  addGraphPoint(s, "投資");
+  addGraphPoint(s, "仮想消費");
 }
 
 function advanceRushSpin(s) {
@@ -125,7 +125,7 @@ function normalHit(s) {
   s.totalHits += 1;
 
   if (Math.random() < SPEC.judgementEntryRate) {
-    const chain = ["通常大当たり 1500個", "50/50ジャッジメント突入"];
+    const chain = ["通常大当たり 1500仮想玉", "50/50ジャッジメント突入"];
     let payout = 1500;
     s.balls += 1500;
 
@@ -134,7 +134,7 @@ function normalHit(s) {
 
     finishHit(s, {
       category: "初当たり",
-      type: chain.join(" → "),
+      type: chain.join(" -> "),
       payout,
     });
     return;
@@ -146,20 +146,20 @@ function normalHit(s) {
 
   finishHit(s, {
     category: "初当たり",
-    type: "通常大当たり 300個 通常へ",
+    type: "通常大当たり 300仮想玉 通常へ",
     payout: 300,
   });
 }
 
 function resolveJudgement(s, chain) {
   if (Math.random() < SPEC.judgementSuccessRate) {
-    chain.push("50/50成功 7500個");
+    chain.push("50/50成功 7500仮想玉");
     s.balls += 7500;
     const tsuranuki = resolveTsuranuki(s, chain);
     return { payout: 7500 + tsuranuki.payout };
   }
 
-  chain.push("50/50失敗 1500個 通常へ");
+  chain.push("50/50終了 1500仮想玉 通常へ");
   s.balls += 1500;
   s.mode = "normal";
   s.supportLeft = 0;
@@ -174,12 +174,12 @@ function resolveTsuranuki(s, chain) {
     loopCount += 1;
     payout += 7500;
     s.balls += 7500;
-    chain.push(`ツラヌキチャレンジ成功 ${loopCount}回目 7500個`);
+    chain.push(`チャレンジ成功 ${loopCount}回目 7500仮想玉`);
   }
 
   payout += 1500;
   s.balls += 1500;
-  chain.push("ツラヌキチャレンジ終了 1500個 RUSHへ");
+  chain.push("チャレンジ終了 1500仮想玉 RUSHへ");
   enterRush(s);
   return { payout };
 }
@@ -189,11 +189,11 @@ function rushHit(s) {
   s.totalHits += 1;
   s.balls += 1500;
 
-  const chain = ["RUSH大当たり 1500個"];
+  const chain = ["RUSH大当たり 1500仮想玉"];
   let payout = 1500;
 
   if (Math.random() < 0.42) {
-    chain.push("運命の一撃突入");
+    chain.push("追加チャレンジ突入");
     const fate = resolveFateAttack(s, chain);
     payout += fate.payout;
   } else {
@@ -204,18 +204,18 @@ function rushHit(s) {
 
   finishHit(s, {
     category: "RUSH",
-    type: chain.join(" → "),
+    type: chain.join(" -> "),
     payout,
   });
 }
 
 function resolveFateAttack(s, chain) {
   if (Math.random() < SPEC.fateSuccessRate) {
-    chain.push("運命の一撃成功");
+    chain.push("追加チャレンジ成功");
     return resolveTsuranuki(s, chain);
   }
 
-  chain.push("運命の一撃失敗 RUSHへ");
+  chain.push("追加チャレンジ終了 RUSHへ");
   resetRush(s);
   s.mode = "rush";
   return { payout: 0 };

@@ -70,7 +70,7 @@ export const spinUntilHit = (state, settings, maxSpins = 10000) => {
   }
 
   if (spun >= maxSpins && s.totalHits === startHits) {
-    s.lastEvent = `${maxSpins.toLocaleString()}回転で当たりなし`;
+    s.lastEvent = `${maxSpins.toLocaleString()}回転で大当たりなし`;
   }
 
   return s;
@@ -102,13 +102,13 @@ function advanceNormalSpin(s, settings) {
 function spendNormalUnit(s) {
   if (s.balls > 0) {
     s.balls = Math.max(0, s.balls - SPEC.ballsPerUnit);
-    addGraphPoint(s, "持ち玉遊技");
+    addGraphPoint(s, "持ち玉での仮想遊技");
     return;
   }
 
   s.money -= SPEC.yenPerUnit;
   s.balls -= SPEC.ballsPerUnit;
-  addGraphPoint(s, "投資");
+  addGraphPoint(s, "仮想消費");
 }
 
 function advanceRushSpin(s) {
@@ -126,22 +126,22 @@ function normalHit(s) {
 
   if (r < 0.1) {
     payout = 1500;
-    label = "通常大当たり 1500個 RUSH";
+    label = "通常大当たり 1500仮想玉 RUSH";
     rush = true;
   } else if (r < 45) {
     payout = 600;
-    label = "通常大当たり 600個 RUSH";
+    label = "通常大当たり 600仮想玉 RUSH";
     rush = true;
   } else if (r < 50) {
     payout = 310;
-    label = "通常大当たり 310個 RUSH";
+    label = "通常大当たり 310仮想玉 RUSH";
     rush = true;
   } else if (r < 80) {
     payout = 600;
-    label = "通常大当たり 600個 通常";
+    label = "通常大当たり 600仮想玉 通常へ";
   } else {
     payout = 310;
-    label = "通常大当たり 310個 通常";
+    label = "通常大当たり 310仮想玉 通常へ";
   }
 
   s.firstHitCount += 1;
@@ -209,7 +209,7 @@ function rushAHit(s) {
   resetRush(s);
   s.mode = moveToB ? "rushB" : "rushA";
 
-  const label = `RUSH A 750個 リセット${moveToB ? " モードBへ" : ""}`;
+  const label = `RUSH A 750仮想玉 リセット${moveToB ? " モードBへ" : ""}`;
   addHistory(s, {
     category: "RUSH",
     type: label,
@@ -233,7 +233,7 @@ function rushBHit(s) {
     resetRush(s);
     s.mode = moveToA ? "rushA" : "rushB";
 
-    const label = `RUSH B 3000個 リセット${moveToA ? " モードAへ" : ""}`;
+    const label = `RUSH B 3000仮想玉 リセット${moveToA ? " モードAへ" : ""}`;
     addHistory(s, {
       category: "RUSH",
       type: label,
@@ -256,7 +256,7 @@ function rushBHit(s) {
   s.mode = moveToA ? "rushA" : "rushB";
 
   const loopCount = ultimateExtra / 3000;
-  const label = `アルティメットドライブ ${payout}個 (${loopCount}ループ)${
+  const label = `アルティメットドライブ ${payout}仮想玉 (${loopCount}ループ)${
     moveToA ? " モードAへ" : ""
   }`;
   addHistory(s, {

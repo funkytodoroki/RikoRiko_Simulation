@@ -46,6 +46,83 @@
   gap: 12px;
 }
 
+.info-section,
+.policy-page {
+  padding: 14px;
+  border: 1px solid #dfe5e2;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(16, 22, 19, 0.06);
+}
+
+.info-section h2,
+.policy-page h1,
+.policy-page h2 {
+  margin: 0;
+  color: #101613;
+  letter-spacing: 0;
+}
+
+.info-section h2 {
+  font-size: 17px;
+}
+
+.info-section p,
+.policy-page p,
+.rights-note,
+.disclaimer {
+  color: #68736f;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.info-section p,
+.policy-page p {
+  margin-top: 8px;
+}
+
+.policy-page {
+  display: grid;
+  gap: 18px;
+}
+
+.policy-page h1 {
+  font-size: 25px;
+  line-height: 1.2;
+}
+
+.policy-page h2 {
+  font-size: 17px;
+}
+
+.form-link {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #23645c;
+  border-radius: 8px;
+  color: #fff;
+  background: #23645c;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  align-items: center;
+}
+
+.form-link:hover {
+  background: #1c514a;
+}
+
+.disclaimer {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(35, 100, 92, 0.22);
+  border-radius: 8px;
+  color: #34504a;
+  background: rgba(35, 100, 92, 0.08);
+}
+
 .machine-card {
   padding: 14px;
   border: 1px solid #dfe5e2;
@@ -80,6 +157,13 @@
   margin-top: 6px;
   color: #68736f;
   font-size: 13px;
+}
+
+.machine-card .rights-note,
+.machine-title .rights-note {
+  margin-top: 8px;
+  color: #7a4d40;
+  font-size: 12px;
 }
 
 .machine-specs {
@@ -300,6 +384,10 @@ button {
   padding: 12px;
 }
 
+.hero-panel + .disclaimer {
+  margin-top: 12px;
+}
+
 .base-select {
   display: grid;
   gap: 6px;
@@ -448,6 +536,26 @@ button.primary {
 .spec-note {
   padding: 16px 2px 0;
   text-align: center;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  padding: 18px 4px 4px;
+  text-align: center;
+}
+
+.site-footer a {
+  color: #23645c;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
 }
 
 @media (min-width: 720px) {
