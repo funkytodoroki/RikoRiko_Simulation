@@ -19,8 +19,8 @@ export const machines = [
   },
   {
     id: "kakegurui-7500",
-    name: "e賭ケグルイ 7500ver.",
-    shortName: "賭ケグルイ",
+    name: "eカケグルイ 7500ver.",
+    shortName: "カケグルイ",
     description:
       "初当たり時の分岐とRUSH中の上乗せ挙動を仮想的に試せるスペックです。表示値は確率検証用の参考値です。",
     specSummary: {
