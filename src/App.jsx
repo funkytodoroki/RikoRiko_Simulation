@@ -4,9 +4,6 @@ import { findMachineById, machines } from "./machines";
 
 const formatter = new Intl.NumberFormat("ja-JP");
 
-const disclaimerText =
-  "このサイトは娯楽用の確率シミュレーターです。実際の金銭、景品、換金、賭け、遊技結果を提供せず、実店舗や実機での結果を保証しません。";
-
 export default function App() {
   const [route, setRoute] = useState(() => parseHashRoute());
 
@@ -18,6 +15,10 @@ export default function App() {
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [route.type, route.machineId]);
 
   const selectedMachine =
     route.type === "machine" ? findMachineById(route.machineId) : null;
@@ -53,21 +54,12 @@ function TopPage({ machines }) {
       <header className="top-hero">
         <p className="eyebrow">Pachinko Probability Simulator</p>
         <h1>パチンコ確率シミュレーター</h1>
-        <p>
-          仮想1000円あたりの回転数を変えながら、仮想玉数の推移とRUSH性能を検証できます。
-          実際の遊技や収益をすすめるものではありません。
-        </p>
+        <ul className="feature-list" aria-label="主な機能">
+          <li>仮想収支とRUSH性能をすばやく検証</li>
+          <li>確率の偏りをスランプグラフで可視化</li>
+          <li>公開スペックに基づく非公式シミュレーター</li>
+        </ul>
       </header>
-
-      <Disclaimer />
-
-      <section className="info-section" aria-label="サイトの説明">
-        <h2>このサイトについて</h2>
-        <p>
-          パチンコ機の公開スペックをもとに、乱数による挙動を試せる非公式のファンメイドツールです。
-          表示される仮想玉数や仮想消費は、確率のゆらぎを観察するための参考値です。
-        </p>
-      </section>
 
       <section className="machine-list" aria-label="機種一覧">
         {machines.map((machine) => (
@@ -99,6 +91,61 @@ function TopPage({ machines }) {
         ))}
       </section>
 
+      <details className="info-section guide-details">
+        <summary>初めての方・当サイトのポリシー</summary>
+        <div className="guide-content">
+          <section>
+            <h2>このサイトでできること</h2>
+            <p>
+              このサイトは、公開されている機種スペックをもとに、初当たり、RUSH突入、継続、大当たり後の仮想出玉の変化を確認できる確率シミュレーターです。
+              1回転ずつ試すだけでなく、次の大当たりまでまとめて進めることで、確率の偏りや展開の違いを短時間で観察できます。
+            </p>
+            <p>
+              仮想1000円あたりの回転数を変更すると、同じスペックでも仮想消費の増え方が変わります。
+              回転率の違いによって、初当たりまでの仮想消費やスランプグラフの見え方がどう変化するかを確認できます。
+            </p>
+          </section>
+
+          <section>
+            <h2>シミュレーションで確認できる主な項目</h2>
+            <p>
+              シミュレーターでは、初当たり回数、初当たり確率、RUSH突入回数、RUSH突入率、総大当たり回数、RUSH中の大当たり回数などを表示します。
+              これらの数値は、実際の遊技結果ではなく、乱数によって発生した仮想的な試行結果です。
+            </p>
+            <p>
+              スランプグラフでは、仮想出玉の増減を時系列で確認できます。
+              短い試行では結果が大きく上下することがあり、試行を重ねるほどスペック上の傾向に近づきやすくなります。
+            </p>
+          </section>
+
+          <section>
+            <h2>結果を見るときの注意点</h2>
+            <p>
+              確率は、分母まで試行すれば必ず当たるというものではありません。
+              たとえば大当たり確率が約1/200の機種でも、早く当たることもあれば、数百回転以上当たらないこともあります。
+            </p>
+            <p>
+              RUSH突入率や継続率も同じで、短い試行ではスペック値から大きくズレる場合があります。
+              このサイトでは、そのような確率のゆらぎを観察しやすくするために、結果を履歴やグラフで表示しています。
+            </p>
+          </section>
+
+          <section>
+            <h2>このサイトが扱わないもの</h2>
+            <p>
+              このサイトは娯楽用・確率確認用の非公式ファンメイドツールです。
+              実際の金銭、景品、換金、賭け、店舗での遊技結果を扱うサービスではありません。
+            </p>
+            <p>
+              表示される仮想出玉や仮想消費は、シミュレーション上の参考値です。
+              実機や店舗で同じ結果になること、収益や損失が発生すること、特定の結果が得られることを保証するものではありません。
+            </p>
+          </section>
+        </div>
+      </details>
+
+      <Disclaimer />
+      <FooterDisclaimer />
       <SiteFooter />
     </main>
   );
@@ -154,14 +201,18 @@ function Simulator({ machine, onBack }) {
         </div>
       )}
 
-      <header className="top-bar">
-        <button type="button" className="back-button" onClick={onBack}>
-          トップへ
-        </button>
-        <button type="button" className="reset-button" onClick={handleReset}>
-          リセット
-        </button>
-      </header>
+      <div className="sim-sticky-header">
+        <header className="top-bar">
+          <button type="button" className="back-button" onClick={onBack}>
+            トップへ
+          </button>
+          <button type="button" className="reset-button" onClick={handleReset}>
+            リセット
+          </button>
+        </header>
+
+        <MachineGuide machine={machine} />
+      </div>
 
       <section className="hero-panel">
         <div className="machine-title">
@@ -194,8 +245,6 @@ function Simulator({ machine, onBack }) {
           </div>
         </div>
       </section>
-
-      <Disclaimer />
 
       <section className="action-card">
         <label className="base-select">
@@ -286,8 +335,152 @@ function Simulator({ machine, onBack }) {
         通常 {machine.specSummary.normalOdds} / RUSH {machine.specSummary.rushOdds} /
         電サポ {machine.specSummary.supportSpins}
       </footer>
+      <Disclaimer />
       <SiteFooter />
     </main>
+  );
+}
+
+function MachineGuide({ machine }) {
+  if (machine.machineDetails) {
+    return <MachineDetailGuide machine={machine} />;
+  }
+
+  return (
+    <section className="machine-guide" aria-label={`${machine.name}の機種説明`}>
+      <div className="section-title">
+        <h2>機種説明</h2>
+        <span>{machine.shortName}</span>
+      </div>
+
+      <div className="guide-block">
+        <h3>スペック概要</h3>
+        {machine.overview.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
+
+      <div className="guide-block">
+        <h3>シミュレーションの見どころ</h3>
+        <ul>
+          {machine.simulationPoints.map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="guide-block">
+        <h3>スペック値の注意点</h3>
+        <ul>
+          {machine.specNotes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function MachineDetailGuide({ machine }) {
+  const { machineDetails } = machine;
+
+  return (
+    <details className="machine-guide machine-overview-details">
+      <summary>
+        <span>機種概要</span>
+        <span>{machine.shortName}</span>
+      </summary>
+
+      <dl className="detail-table profile-table">
+        {machineDetails.profileRows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="guide-block">
+        <h3>{machine.name}の特徴</h3>
+        <ul>
+          {machineDetails.features.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
+        </ul>
+      </div>
+
+      <details className="machine-detail-panel">
+        <summary>スペック詳細</summary>
+        <dl className="detail-table spec-detail-table">
+          {machineDetails.specRows.map((row) => (
+            <div key={`${row.group}-${row.label || row.value}`}>
+              <dt>{row.group}</dt>
+              {row.label && <dd className="detail-sub-label">{row.label}</dd>}
+              <dd>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+
+      <details className="machine-detail-panel">
+        <summary>大当たり振り分け</summary>
+        <div className="payout-table-list">
+          {machineDetails.payoutTables.map((table) => (
+            <div key={table.title} className="payout-table-block">
+              <h3>{table.title}</h3>
+              <table className="payout-table">
+                <thead>
+                  <tr>
+                    {table.headers.map((header) => (
+                      <th key={header}>{header}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {table.rows.map((row) => (
+                    <tr key={row.join("-")}>
+                      {row.map((cell) => (
+                        <td key={cell}>{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {table.notes && (
+                <ul className="detail-notes">
+                  {table.notes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <details className="machine-detail-panel">
+        <summary>各モード毎の特徴</summary>
+        <div className="mode-feature-list">
+          {machineDetails.modeFeatures.map((mode) => (
+            <div key={mode.title} className="guide-block">
+              <h3>{mode.title}</h3>
+              <ul>
+                {mode.points.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <p className="reference-note">
+        参考:
+        <a href={machineDetails.reference.url} target="_blank" rel="noreferrer">
+          {machineDetails.reference.label}
+        </a>
+      </p>
+    </details>
   );
 }
 
@@ -331,7 +524,21 @@ function StaticPage({ page }) {
 }
 
 function Disclaimer() {
-  return <p className="disclaimer">{disclaimerText}</p>;
+  return (
+    <p className="disclaimer compact-disclaimer">
+      本サイトは娯楽用です。実機・店舗での結果を保証しません。
+      <a href="#/terms">利用規約・免責</a>
+    </p>
+  );
+}
+
+function FooterDisclaimer() {
+  return (
+    <p className="footer-disclaimer">
+      このサイトは確率確認を目的とした非公式ファンメイドツールです。
+      実際の金銭、景品、換金、賭け、店舗での結果を扱わず、表示される仮想出玉や仮想消費は参考値です。
+    </p>
+  );
 }
 
 function SiteFooter() {
